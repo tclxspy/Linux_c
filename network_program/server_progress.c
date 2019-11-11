@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
     if (pid == 0) {
 	while (1) {
-	    len = read(cfd, buf, sizeof(buf));
+	    len = Read(cfd, buf, sizeof(buf));
 	    if (len == 0) {
 		close(cfd);
 		exit(1);
@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
 	    for (i = 0; i < len; i++)
 		buf[i] = toupper(buf[i]);
 
-	    write(cfd, buf, len);
-	    write(STDOUT_FILENO, buf, len);
+	    Write(cfd, buf, len);
+	    Write(STDOUT_FILENO, buf, len);
 	}
     }
 

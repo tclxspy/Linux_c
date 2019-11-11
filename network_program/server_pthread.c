@@ -23,7 +23,7 @@ void *do_work(void *arg)
     char str[INET_ADDRSTRLEN];
 
     while (1) {
-	n = read(ts->cfd, buf, MAXLINE);
+	n = Read(ts->cfd, buf, MAXLINE);
 	if (n == 0) {
 	    printf("the client %d closed...\n", ts->cfd);
 	    break;
@@ -35,8 +35,8 @@ void *do_work(void *arg)
 	for (i = 0; i < n; i++)
 	    buf[i] = toupper(buf[i]);
 
-	write(STDOUT_FILENO, buf, n);
-	write(ts->cfd, buf, n);
+	Write(STDOUT_FILENO, buf, n);
+	Write(ts->cfd, buf, n);
     }
     close(ts->cfd);
 

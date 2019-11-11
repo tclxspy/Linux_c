@@ -33,7 +33,7 @@ int Listen(int sockfd, int backlog)
     return value;
 }
 
-int Accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+int Accept(int sockfd, struct sockaddr *addr, socklen_t * addrlen)
 {
     int value;
   again:
@@ -56,48 +56,75 @@ int Connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     return value;
 }
 
-ssize_t Readn(int sockfd, void *vptr, size_t n)
+ssize_t Read(int sockfd, void *ptr, size_t nbytes)
 {
-    size_t n_left;
-    ssize_t n_read;
+    ssize_t n;
+  again:
+    if ((n = read(sockfd, ptr, nbytes)) == -1) {
+	if (errno == EINTR)
+	    goto again;
+	else
+	    return -1;
+    }
+    return n;
+}
+
+ssize_t Write(int sockfd, const void *buf, size_t nbytes)
+{
+
+    ssize_t n;
+  again:
+    if ((n = write(sockfd, buf, nbytes)) == -1) {
+	if (errno == EINTR)
+	    goto again;
+	else
+	    return -1;
+    }
+    return n;
+}
+
+ssize_t readn(int sockfd, void *vptr, size_t n)
+{
+    size_t nleft;
+    ssize_t nread;
     char *ptr;
 
     ptr = vptr;
-    n_left = n;
+    nleft = n;
 
-    while (n_left > 0) {
-	if ((n_read = read(sockfd, ptr, n_left)) < 0) {
+    while (nleft > 0) {
+	if ((nread = read(sockfd, ptr, nleft)) < 0) {
 	    if (errno == EINTR)
-		n_read = 0;
+		nread = 0;
 	    else
 		return -1;
-	} else if (n_read == 0)
+	} else if (nread == 0)
 	    break;
 
-	n_left -= n_read;
-	ptr += n_read;
+	nleft -= nread;
+	ptr += nread;
     }
 
-    return n - n_left;
+    return (n - nleft);
 }
 
-ssize_t Writen(int sockfd, const void *vptr, size_t n)
+ssize_t writen(int sockfd, const void *vptr, size_t n)
 {
-    size_t n_left;
-    ssize_t n_written;
+    size_t nleft;
+    ssize_t nwritten;
     const char *ptr;
 
     ptr = vptr;
-    n_left = n;
-    while(n_left > 0) {
-	if ((n_written = write(sockfd, ptr, n_left)) <= 0) {
-	    if (n_written < 0 && errno == EINTR)
-		n_written = 0;
+    nleft = n;
+    while (nleft > 0) {
+	if ((nwritten = write(sockfd, ptr, nleft)) <= 0) {
+	    if (nwritten < 0 && errno == EINTR)
+		nwritten = 0;
 	    else
 		return -1;
 	}
-	n_left -= n_written;
-	ptr += n_written;
+	nleft -= nwritten;
+	ptr += nwritten;
     }
     return n;
 }
@@ -124,7 +151,7 @@ static ssize_t my_read(int sockfd, char *ptr)
     return 1;
 }
 
-ssize_t Readline(int sockfd, void *vptr, size_t maxlen)
+ssize_t readline(int sockfd, void *vptr, size_t maxlen)
 {
     ssize_t n, rc;
     char c, *ptr;
@@ -137,7 +164,7 @@ ssize_t Readline(int sockfd, void *vptr, size_t maxlen)
 		break;
 	} else if (rc == 0) {
 	    *ptr = 0;
-	    return n - 1;
+	    return (n - 1);
 	} else
 	    return -1;
     }
