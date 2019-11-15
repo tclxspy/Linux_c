@@ -30,7 +30,7 @@ void read_cb(struct bufferevent * bev, void * arg)
 	}
 
 	//printf("server send: %s\n", buf);
-    write(STDOUT_FILENO, buf, strlen(buf));
+	write(STDOUT_FILENO, buf, strlen(buf));
 
 	sleep(1);
 
@@ -41,7 +41,6 @@ void read_cb(struct bufferevent * bev, void * arg)
 void write_cb(struct bufferevent * bev, void * arg)
 {
 	//printf("i am client. the call back is unuseful.\n");
-
 	return;
 }
 
@@ -72,7 +71,8 @@ void read_terminal(evutil_socket_t fd, short what, void * arg)
 	char buf[BUFSIZ] = {
 		0
 	};
-    //read data from terminal
+
+	//read data from terminal
 	int len = read(fd, buf, sizeof(buf));
 
 	if (len == 0) {
@@ -101,8 +101,8 @@ int main(int argc, char * argv[])
 	struct sockaddr_in srv_addr;
 	bzero(&srv_addr, sizeof(srv_addr));
 	srv_addr.sin_family = AF_INET;
-	srv_addr.sin_port = htons(9527);
-	inet_pton(AF_INET, "127.0.0.1", &srv_addr.sin_addr.s_addr);
+	srv_addr.sin_port = htons(SRV_PORT);
+	inet_pton(AF_INET, SRV_ADDR, &srv_addr.sin_addr.s_addr);
 
 	//connect server
 	bufferevent_socket_connect(bev, (struct sockaddr *) &srv_addr, sizeof(srv_addr));
