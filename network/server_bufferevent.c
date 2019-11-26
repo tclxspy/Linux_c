@@ -6,6 +6,7 @@
 #include <event2/bufferevent.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include "wrap.h"
 
 #define SRV_PORT				9527
@@ -19,6 +20,7 @@ void read_cb(struct bufferevent * bev, void * arg)
 
 	//read client by server
 	size_t len = bufferevent_read(bev, buf, sizeof(buf));
+
 	if (len == 0) {
 		return;
 	}
@@ -27,9 +29,8 @@ void read_cb(struct bufferevent * bev, void * arg)
 	}
 
 	//printf("client send: %s\n", buf);
+	write(STDOUT_FILENO, buf, strlen(buf));
 
-    write(STDOUT_FILENO, buf, strlen(buf));
-    
 	char * buffer = "server feedback: receive your data, thanks.\n";
 
 	//send data to client
@@ -44,7 +45,6 @@ void read_cb(struct bufferevent * bev, void * arg)
 void write_cb(struct bufferevent * bev, void * arg)
 {
 	//printf("i am server. i success to feedback. and called by write_cb function.\n");
-
 	return;
 }
 
@@ -87,6 +87,18 @@ void cb_listener(struct evconnlistener * listener, evutil_socket_t fd, struct so
 }
 
 
+static void signal_cb(evutil_socket_t sig, short events, void * user_data)
+{
+	struct event_base * base = user_data;
+	struct timeval delay = {
+		1, 0
+	};
+
+	printf("Caught an interrupt signal; exiting cleanly in one seconds.\n");
+	event_base_loopexit(base, &delay);
+}
+
+
 int main(int argc, char * argv[])
 {
 	//server addr
@@ -102,6 +114,18 @@ int main(int argc, char * argv[])
 	//create socket, bind, listener
 	struct evconnlistener * listener = evconnlistener_new_bind(base, cb_listener, base, 
 		LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, 36, (struct sockaddr *) &srv_addr, sizeof(srv_addr));
+
+	if (!listener) {
+		fprintf(stderr, "Could not create a listener!\n");
+		return 1;
+	}
+
+	struct event * signal_event = evsignal_new(base, SIGINT, signal_cb, (void *) base);
+
+	if (!signal_event || event_add(signal_event, NULL) < 0) {
+		fprintf(stderr, "Could not create/add a signal event!\n");
+		return 1;
+	}
 
 	//loop
 	event_base_dispatch(base);
